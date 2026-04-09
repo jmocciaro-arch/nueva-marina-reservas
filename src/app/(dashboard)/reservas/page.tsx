@@ -213,61 +213,80 @@ export default function ReservasPage() {
       {/* Grid Calendar */}
       <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px]">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="px-4 py-3 text-left text-gray-400 text-sm font-medium w-20">Hora</th>
-                {displayCourts.map((court, i) => (
-                  <th key={court.id} className="px-4 py-3 text-center text-sm font-bold" style={{ color: COURT_COLORS[i % 4] }}>
-                    {court.name}
-                  </th>
+          <div className="min-w-[700px]">
+            {/* Header */}
+            <div className="flex border-b border-gray-700">
+              <div className="w-20 flex-shrink-0 px-4 py-3 text-gray-400 text-sm font-medium">Hora</div>
+              {displayCourts.map((court, i) => (
+                <div key={court.id} className="flex-1 px-4 py-3 text-center text-sm font-bold" style={{ color: COURT_COLORS[i % 4] }}>
+                  {court.name}
+                </div>
+              ))}
+            </div>
+            {/* Body */}
+            <div className="flex">
+              {/* Time column */}
+              <div className="w-20 flex-shrink-0">
+                {timeSlots.map((time) => (
+                  <div key={time} className="h-12 px-4 flex items-center text-gray-400 text-sm font-mono border-b border-gray-700/50">
+                    {time}
+                  </div>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {timeSlots.map((time) => (
-                <tr key={time} className="border-b border-gray-700/50 hover:bg-gray-700/20">
-                  <td className="px-4 py-2 text-gray-400 text-sm font-mono">{time}</td>
-                  {displayCourts.map((court, courtIdx) => {
-                    const booking = getBookingForSlot(court.id, time)
+              </div>
+              {/* Court columns */}
+              {displayCourts.map((court, courtIdx) => (
+                <div key={court.id} className="flex-1 relative">
+                  {/* Slot backgrounds */}
+                  {timeSlots.map((time) => {
                     const occupied = isSlotOccupied(court.id, time)
-                    if (occupied && !booking) {
-                      return <td key={court.id} className="px-2 py-1"></td>
-                    }
-                    if (booking) {
-                      const rows = booking.duration_minutes / 30
-                      return (
-                        <td key={court.id} className="px-2 py-1" rowSpan={rows}>
-                          <div
-                            className="rounded-xl p-3 cursor-pointer hover:opacity-90 transition-all h-full"
-                            style={{ backgroundColor: COURT_COLORS[courtIdx % 4] + '30', borderLeft: `4px solid ${COURT_COLORS[courtIdx % 4]}` }}
-                            onClick={() => openEdit(booking)}
-                          >
-                            <p className="text-white font-bold text-sm truncate">{booking.customer_name}</p>
-                            <p className="text-gray-300 text-xs">{booking.start_time?.substring(0, 5)} - {booking.end_time?.substring(0, 5)}</p>
-                            <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs ${
-                              booking.status === 'confirmed' ? 'bg-green-500/30 text-green-300' :
-                              booking.status === 'pending' ? 'bg-yellow-500/30 text-yellow-300' : 'bg-red-500/30 text-red-300'
-                            }`}>{BOOKING_STATUS_LABELS[booking.status]}</span>
-                          </div>
-                        </td>
-                      )
-                    }
                     return (
-                      <td key={court.id} className="px-2 py-1">
-                        <button
-                          onClick={() => openCreate(court.id, time)}
-                          className="w-full h-10 rounded-lg border-2 border-dashed border-gray-700 hover:border-lime-400/50 hover:bg-lime-400/5 transition-all text-gray-600 hover:text-lime-400 text-xs"
-                        >
-                          +
-                        </button>
-                      </td>
+                      <div key={time} className="h-12 px-1 py-0.5 border-b border-gray-700/50">
+                        {!occupied && (
+                          <button
+                            onClick={() => openCreate(court.id, time)}
+                            className="w-full h-full rounded-lg border-2 border-dashed border-gray-700 hover:border-lime-400/50 hover:bg-lime-400/5 transition-all text-gray-600 hover:text-lime-400 text-xs"
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
                     )
                   })}
-                </tr>
+                  {/* Booking overlays */}
+                  {bookings
+                    .filter(b => b.court_id === court.id && b.status !== 'cancelled')
+                    .map((booking) => {
+                      const startStr = booking.start_time?.substring(0, 5) || ''
+                      const slotIndex = timeSlots.indexOf(startStr)
+                      if (slotIndex === -1) return null
+                      const slotCount = booking.duration_minutes / 30
+                      const topPx = slotIndex * 48 // h-12 = 48px
+                      const heightPx = slotCount * 48
+                      return (
+                        <div
+                          key={booking.id}
+                          className="absolute left-1 right-1 rounded-xl p-2 cursor-pointer hover:opacity-90 transition-all z-10 overflow-hidden"
+                          style={{
+                            top: `${topPx + 2}px`,
+                            height: `${heightPx - 4}px`,
+                            backgroundColor: COURT_COLORS[courtIdx % 4] + '30',
+                            borderLeft: `4px solid ${COURT_COLORS[courtIdx % 4]}`,
+                          }}
+                          onClick={() => openEdit(booking)}
+                        >
+                          <p className="text-white font-bold text-sm truncate">{booking.customer_name}</p>
+                          <p className="text-gray-300 text-xs">{booking.start_time?.substring(0, 5)} - {booking.end_time?.substring(0, 5)}</p>
+                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs ${
+                            booking.status === 'confirmed' ? 'bg-green-500/30 text-green-300' :
+                            booking.status === 'pending' ? 'bg-yellow-500/30 text-yellow-300' : 'bg-red-500/30 text-red-300'
+                          }`}>{BOOKING_STATUS_LABELS[booking.status]}</span>
+                        </div>
+                      )
+                    })}
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </div>
 
