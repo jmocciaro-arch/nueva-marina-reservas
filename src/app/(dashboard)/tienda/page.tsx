@@ -6,7 +6,7 @@ import type { Product } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
 import { ShoppingBag, Plus, Edit2, Trash2, X, Save, ShoppingCart, Package, Minus } from 'lucide-react'
 
-const CATEGORIES = ['Pelotas', 'Paletas', 'Grips', 'Accesorios', 'Ropa', 'Otro']
+const CATEGORIES = ['Paletas', 'Pelotas', 'Grips', 'Accesorios', 'Bolsos', 'Zapatillas', 'Ropa', 'Otro']
 
 interface ProductForm {
   name: string; category: string; price: number; stock: number; image_url: string; is_active: boolean

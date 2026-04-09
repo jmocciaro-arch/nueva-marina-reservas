@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, color: 'text-lime-400' },
+  { href: '/estadisticas', label: 'Dashboard', icon: LayoutDashboard, color: 'text-lime-400' },
   { href: '/reservas', label: 'Reservas', icon: CalendarDays, color: 'text-blue-400' },
   { href: '/caja', label: 'Caja', icon: DollarSign, color: 'text-green-400' },
   { href: '/tienda', label: 'NM Shop', icon: ShoppingBag, color: 'text-purple-400' },

@@ -139,6 +139,31 @@ export default function ReservasPage() {
       }
     }
 
+    // Send email notification
+    if (!editingId && form.status !== 'cancelled') {
+      try {
+        const endTime = addMinutesToTime(form.start_time, form.duration_minutes)
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'booking_confirmation',
+            data: {
+              customerName: form.customer_name,
+              customerEmail: form.customer_email,
+              courtName: `Pista ${form.court_id}`,
+              date: form.date,
+              startTime: form.start_time,
+              endTime,
+              price: form.price,
+              players: form.players,
+              staffName: currentUser?.name,
+            },
+          }),
+        })
+      } catch {}
+    }
+
     setShowModal(false)
     setLoading(false)
     loadData()

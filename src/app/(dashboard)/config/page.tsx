@@ -65,17 +65,14 @@ export default function ConfigPage() {
 
   async function handleCreateStaff() {
     setSaving(true)
-    // Create user via Supabase Auth (admin API would be needed in production)
-    const { data, error } = await supabase.auth.signUp({
-      email: staffForm.email,
-      password: staffForm.password,
+    const res = await fetch('/api/create-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(staffForm),
     })
-    if (data?.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        full_name: staffForm.full_name,
-        role: staffForm.role,
-      })
+    const result = await res.json()
+    if (!res.ok) {
+      alert(result.error || 'Error al crear usuario')
     }
     setShowStaffModal(false)
     setSaving(false)
