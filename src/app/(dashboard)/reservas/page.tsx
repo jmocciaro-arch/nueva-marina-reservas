@@ -23,6 +23,7 @@ interface BookingForm {
   customer_name: string
   customer_email: string
   customer_phone: string
+  players: string
   date: string
   start_time: string
   duration_minutes: number
@@ -36,6 +37,7 @@ const defaultForm: BookingForm = {
   customer_name: '',
   customer_email: '',
   customer_phone: '',
+  players: '',
   date: new Date().toISOString().split('T')[0],
   start_time: '09:00',
   duration_minutes: 60,
@@ -53,8 +55,19 @@ export default function ReservasPage() {
   const [form, setForm] = useState<BookingForm>(defaultForm)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null)
   const supabase = createClient()
   const timeSlots = generateTimeSlots(8, 0, 30)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        supabase.from('profiles').select('full_name').eq('id', data.user.id).single().then(({ data: profile }) => {
+          setCurrentUser({ id: data.user!.id, name: profile?.full_name || data.user!.email || '' })
+        })
+      }
+    })
+  }, [])
 
   const loadData = useCallback(async () => {
     const [courtsRes, bookingsRes] = await Promise.all([
@@ -80,6 +93,7 @@ export default function ReservasPage() {
       customer_name: booking.customer_name,
       customer_email: booking.customer_email || '',
       customer_phone: booking.customer_phone || '',
+      players: (booking as any).players || '',
       date: booking.date,
       start_time: booking.start_time?.substring(0, 5) || '',
       duration_minutes: booking.duration_minutes,
@@ -93,11 +107,12 @@ export default function ReservasPage() {
   async function handleSave() {
     setLoading(true)
     const endTime = addMinutesToTime(form.start_time, form.duration_minutes)
-    const data = {
+    const data: any = {
       court_id: form.court_id,
       customer_name: form.customer_name,
       customer_email: form.customer_email || null,
       customer_phone: form.customer_phone || null,
+      players: form.players || null,
       date: form.date,
       start_time: form.start_time,
       end_time: endTime,
@@ -105,6 +120,7 @@ export default function ReservasPage() {
       status: form.status,
       notes: form.notes || null,
       price: form.price,
+      created_by: currentUser?.id || null,
     }
 
     if (editingId) {
@@ -118,6 +134,7 @@ export default function ReservasPage() {
           reference_id: newBooking.id,
           concept: `Reserva Pista ${form.court_id} — ${form.customer_name}`,
           amount: form.price,
+          created_by: currentUser?.id || null,
         })
       }
     }
@@ -344,11 +361,18 @@ export default function ReservasPage() {
               </button>
             </div>
             <div className="p-6 space-y-4">
+              {/* Creado por */}
+              {currentUser && (
+                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl px-4 py-2 flex items-center gap-2">
+                  <span className="text-cyan-400 text-xs font-medium">Registra:</span>
+                  <span className="text-white text-sm font-bold">{currentUser.name}</span>
+                </div>
+              )}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Nombre *</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Reserva a nombre de *</label>
                 <input value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-lg focus:ring-2 focus:ring-lime-400 focus:border-transparent"
-                  placeholder="Nombre del cliente" />
+                  placeholder="Nombre de quien reserva" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -361,6 +385,12 @@ export default function ReservasPage() {
                   <input type="tel" value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-lime-400" placeholder="+34 600 000 000" />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Jugadores (nombres separados por coma)</label>
+                <input value={form.players} onChange={(e) => setForm({ ...form, players: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-lime-400"
+                  placeholder="Ej: Juan, Pedro, María, Ana" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
