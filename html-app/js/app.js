@@ -875,6 +875,8 @@ function openPlayerModal() {
   document.getElementById('plEmail').value = ''
   document.getElementById('plPhone').value = ''
   document.getElementById('plPhotoUrl').value = ''
+  document.getElementById('plPhotoFile').value = ''
+  document.getElementById('photoPreview').innerHTML = '<span style="color:#64748b;font-size:24px">📷</span>'
   document.getElementById('plNotes').value = ''
   openModal('playerModal')
 }
@@ -896,14 +898,63 @@ async function editPlayer(id) {
   document.getElementById('plEmail').value = p.email || ''
   document.getElementById('plPhone').value = p.phone || ''
   document.getElementById('plPhotoUrl').value = p.photo_url || ''
+  document.getElementById('plPhotoFile').value = ''
+  if (p.photo_url) {
+    document.getElementById('photoPreview').innerHTML = `<img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">`
+  } else {
+    document.getElementById('photoPreview').innerHTML = '<span style="color:#64748b;font-size:24px">📷</span>'
+  }
   document.getElementById('plNotes').value = p.notes || ''
   openModal('playerModal')
+}
+
+// Photo preview
+function previewPhoto(input) {
+  const file = input.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`
+  }
+  reader.readAsDataURL(file)
+}
+
+// Upload photo to Supabase Storage
+async function uploadPlayerPhoto(name, lastName) {
+  const fileInput = document.getElementById('plPhotoFile')
+  const file = fileInput?.files?.[0]
+  if (!file) return document.getElementById('plPhotoUrl').value.trim() || null
+
+  // Generate filename: 2026_04_10_apellido_nombre
+  const today = new Date().toISOString().split('T')[0].replace(/-/g, '_')
+  const cleanName = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_')
+  const ext = file.name.split('.').pop() || 'jpg'
+  const fileName = `${today}_${cleanName(lastName)}_${cleanName(name)}.${ext}`
+
+  const { data, error } = await db.storage.from('fotos-jugadores').upload(fileName, file, {
+    cacheControl: '3600',
+    upsert: true
+  })
+
+  if (error) {
+    console.error('Upload error:', error)
+    alert('Error al subir foto: ' + error.message)
+    return null
+  }
+
+  // Get public URL
+  const { data: urlData } = db.storage.from('fotos-jugadores').getPublicUrl(fileName)
+  return urlData?.publicUrl || null
 }
 
 async function savePlayer() {
   const name = document.getElementById('plName').value.trim()
   const last_name = document.getElementById('plLastName').value.trim()
   if (!name || !last_name) return alert('Ingresa nombre y apellido')
+
+  // Upload photo first if file selected
+  const photoUrl = await uploadPlayerPhoto(name, last_name)
+
   const data = {
     name,
     last_name,
@@ -916,7 +967,7 @@ async function savePlayer() {
     emergency_phone: document.getElementById('plEmergencyPhone').value.trim() || null,
     email: document.getElementById('plEmail').value.trim() || null,
     phone: document.getElementById('plPhone').value.trim() || null,
-    photo_url: document.getElementById('plPhotoUrl').value.trim() || null,
+    photo_url: photoUrl || document.getElementById('plPhotoUrl').value.trim() || null,
     notes: document.getElementById('plNotes').value.trim() || null,
   }
   if (editingPlayerId) await db.from('players').update(data).eq('id', editingPlayerId)

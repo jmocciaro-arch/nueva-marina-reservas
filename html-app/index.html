@@ -469,7 +469,19 @@
         <div class="form-group"><label>Telefono</label><input type="tel" id="plPhone" placeholder="+34 600 000 000"></div>
       </div>
       <div class="form-group"><label>Telefono Emergencia</label><input type="tel" id="plEmergencyPhone" placeholder="+34 600 000 000"></div>
-      <div class="form-group"><label>Foto URL</label><input type="text" id="plPhotoUrl" placeholder="URL de foto del jugador"></div>
+      <div class="form-group">
+        <label>Foto del Jugador</label>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div id="photoPreview" style="width:80px;height:80px;border-radius:12px;background:#374151;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:2px dashed #4b5563">
+            <span style="color:#64748b;font-size:24px">📷</span>
+          </div>
+          <div style="flex:1">
+            <input type="file" id="plPhotoFile" accept="image/*" capture="environment" onchange="previewPhoto(this)" style="margin-bottom:8px">
+            <input type="text" id="plPhotoUrl" placeholder="O pegar URL de foto" style="font-size:13px">
+            <p style="color:#475569;font-size:11px;margin-top:4px">Subi una foto o sacala con la camara del celular. Se guarda como: 2026_04_10_apellido_nombre</p>
+          </div>
+        </div>
+      </div>
       <div class="form-group"><label>Notas</label><textarea id="plNotes" rows="2" placeholder="Notas opcionales sobre el jugador..."></textarea></div>
     </div>
     <div class="modal-footer">
