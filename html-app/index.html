@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nueva Marina Reservas - Padel & Sport</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+
+<!-- ==================== LOGIN PAGE ==================== -->
+<div id="loginPage" class="login-page">
+  <div class="login-card">
+    <div class="logo">
+      <div class="icon">MN</div>
+      <h1>Nueva Marina</h1>
+      <p>Padel & Sport — Reservas</p>
+    </div>
+    <form id="loginForm">
+      <div id="loginError" class="error-msg hidden"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="admin@nuevamarina.es" required>
+      </div>
+      <div class="form-group">
+        <label>Contrasena</label>
+        <div style="position:relative">
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+          <button type="button" onclick="togglePassword('loginPassword', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:18px">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-cyan btn-lg" style="width:100%">
+        Iniciar Sesion
+      </button>
+      <p style="text-align:center;margin-top:12px">
+        <a href="#" onclick="showRegister()" style="color:#06b6d4;font-size:13px">No tenes cuenta? Registrate aqui</a>
+      </p>
+    </form>
+    <!-- Register Form -->
+    <form id="registerForm" class="hidden" onsubmit="doRegister(event)">
+      <div id="regError" class="error-msg hidden"></div>
+      <p style="margin-bottom:12px"><a href="#" onclick="showLogin()" style="color:#64748b;font-size:13px">← Volver al login</a></p>
+      <h2 style="color:white;font-size:20px;margin-bottom:4px">Crear Cuenta</h2>
+      <p style="color:#64748b;font-size:13px;margin-bottom:16px">Registrate para reservar pistas y participar en torneos</p>
+      <div class="form-row">
+        <div class="form-group"><label>Nombre *</label><input type="text" id="regName" placeholder="Juan" required></div>
+        <div class="form-group"><label>Apellido *</label><input type="text" id="regLastName" placeholder="Garcia" required></div>
+      </div>
+      <div class="form-group"><label>Email *</label><input type="email" id="regEmail" placeholder="email@ejemplo.com" required></div>
+      <div class="form-group"><label>Telefono *</label><input type="tel" id="regPhone" placeholder="+34 600 000 000" required></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Contrasena *</label>
+          <div style="position:relative">
+            <input type="password" id="regPassword" placeholder="Min. 6" required>
+            <button type="button" onclick="togglePassword('regPassword', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:18px">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirmar *</label>
+          <div style="position:relative">
+            <input type="password" id="regPassword2" placeholder="Repetir" required>
+            <button type="button" onclick="togglePassword('regPassword2', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:18px">👁</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:#374151;border-radius:12px;padding:12px;margin-bottom:16px">
+        <span style="font-size:18px">🛡</span>
+        <span style="color:#94a3b8;font-size:13px" id="captchaQuestion"></span>
+        <input type="number" id="regCaptcha" oninput="checkCaptcha()" style="width:60px;padding:8px;text-align:center;border-radius:8px;background:#1e293b;border:1px solid #4b5563;color:white" placeholder="?">
+        <span id="captchaCheck"></span>
+      </div>
+      <button type="submit" class="btn btn-cyan btn-lg" style="width:100%">Registrarse</button>
+    </form>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="appPage" class="app hidden">
+  <!-- Mobile toggle -->
+  <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+  <div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon">MN</div>
+      <div><h1>Nueva Marina</h1><p>Padel & Sport</p></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a onclick="showSection('dashboard')" class="active" data-section="dashboard">📊 Dashboard</a>
+      <a onclick="showSection('reservas')" data-section="reservas">📅 Reservas</a>
+      <a onclick="showSection('caja')" data-section="caja">💰 Caja</a>
+      <a onclick="showSection('tienda')" data-section="tienda">🛍 NM Shop</a>
+      <a onclick="showSection('torneos')" data-section="torneos">🏆 Torneos</a>
+      <a onclick="showSection('ligas')" data-section="ligas">⚽ Ligas</a>
+      <a onclick="showSection('ranking')" data-section="ranking">🥇 Ranking</a>
+      <a onclick="showSection('jugadores')" data-section="jugadores">👥 Jugadores</a>
+      <a onclick="showSection('config')" data-section="config">⚙ Configuracion</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="logout()">🚪 Cerrar Sesion</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- ========== DASHBOARD ========== -->
+    <div id="sec-dashboard" class="section active">
+      <div class="page-header">
+        <div>
+          <h1>📊 Dashboard</h1>
+          <p>Panel de control — Nueva Marina Padel & Sport</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="dashLayoutSelect" onchange="changeDashLayout(this.value)" style="padding:8px 12px;background:#374151;border:1px solid #4b5563;border-radius:8px;color:white;font-size:13px">
+            <option value="executive">📊 Resumen Ejecutivo</option>
+            <option value="operations">🎯 Centro de Operaciones</option>
+            <option value="analytics">📈 Analitica Deportiva</option>
+            <option value="members">👥 Gestion de Socios</option>
+          </select>
+          <button class="btn btn-gray btn-sm" onclick="exportBookings()">📥 Excel</button>
+        </div>
+      </div>
+
+      <!-- Layout: Executive (default) -->
+      <div id="dash-executive">
+        <div id="dashStats" class="stats-grid" style="margin-bottom:24px"></div>
+        <div class="card" style="margin-bottom:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h2 style="color:white;font-size:18px">📊 Reservas e Ingresos</h2>
+            <div class="period-selector">
+              <button class="active" onclick="changePeriod('month',this)">Mes</button>
+              <button onclick="changePeriod('quarter',this)">Trim</button>
+              <button onclick="changePeriod('year',this)">Ano</button>
+            </div>
+          </div>
+          <canvas id="mainChart" height="250"></canvas>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="color:white;margin-bottom:16px">🕐 Horarios Populares</h3>
+            <canvas id="hoursChart" height="200"></canvas>
+          </div>
+          <div class="card">
+            <h3 style="color:white;margin-bottom:16px">🎯 Reservas por Pista</h3>
+            <canvas id="courtsChart" height="200"></canvas>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:24px">
+          <div class="card">
+            <h3 style="color:white;margin-bottom:16px">🏅 Mejores Clientes</h3>
+            <div id="topClients" class="top-list"></div>
+          </div>
+          <div class="card">
+            <h3 style="color:white;margin-bottom:16px">👤 Staff — Reservas Creadas</h3>
+            <div id="staffStats"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout: Operations -->
+      <div id="dash-operations" class="hidden">
+        <div id="dashStatsOps" class="stats-grid" style="margin-bottom:24px"></div>
+        <div class="card" style="margin-bottom:24px">
+          <h3 style="color:white;margin-bottom:16px">📅 Reservas de Hoy</h3>
+          <div id="todayBookingsOps"></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="color:white;margin-bottom:16px">⚡ Acciones Rapidas</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button class="btn btn-lime" onclick="showSection('reservas');openBookingModal()">+ Reserva</button>
+              <button class="btn btn-green" onclick="showSection('caja');openCashModal()">+ Cobro</button>
+              <button class="btn btn-purple" onclick="showSection('tienda')">🛍 Tienda</button>
+              <button class="btn btn-yellow" onclick="showSection('torneos')">🏆 Torneos</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="color:white;margin-bottom:16px">🕐 Ultimas Actividades</h3>
+            <div id="recentActivityOps"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout: Analytics -->
+      <div id="dash-analytics" class="hidden">
+        <div id="dashStatsAn" class="stats-grid" style="margin-bottom:24px"></div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card"><h3 style="color:white;margin-bottom:16px">📊 Reservas por Mes</h3><canvas id="analyticsMonthChart" height="200"></canvas></div>
+          <div class="card"><h3 style="color:white;margin-bottom:16px">💰 Ingresos por Mes</h3><canvas id="analyticsRevenueChart" height="200"></canvas></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><h3 style="color:white;margin-bottom:16px">🕐 Heatmap Horarios</h3><canvas id="analyticsHoursChart" height="200"></canvas></div>
+          <div class="card"><h3 style="color:white;margin-bottom:16px">🎯 Ocupacion por Pista</h3><canvas id="analyticsCourtsChart" height="200"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Layout: Members -->
+      <div id="dash-members" class="hidden">
+        <div id="dashStatsMemb" class="stats-grid" style="margin-bottom:24px"></div>
+        <div class="card" style="margin-bottom:24px">
+          <h3 style="color:white;margin-bottom:16px">🔍 Buscar Jugador</h3>
+          <input type="text" id="dashPlayerSearch" placeholder="Buscar por nombre..." oninput="searchDashPlayers()" style="margin-bottom:16px">
+          <div id="dashPlayerResults"></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="color:white;margin-bottom:16px">🏆 Torneos Activos</h3>
+            <div id="dashActiveTournaments"></div>
+          </div>
+          <div class="card">
+            <h3 style="color:white;margin-bottom:16px">⚽ Ligas Activas</h3>
+            <div id="dashActiveLeagues"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== RESERVAS ========== -->
+    <div id="sec-reservas" class="section">
+      <div class="page-header">
+        <div>
+          <h1>📅 Reservas</h1>
+          <p id="reservasDate"></p>
+        </div>
+        <button class="btn btn-lime btn-lg" onclick="openBookingModal()">+ Nueva Reserva</button>
+      </div>
+      <div class="date-nav">
+        <button onclick="changeBookingDate(-1)">&lt;</button>
+        <input type="date" id="bookingDateInput" onchange="loadBookings()">
+        <button onclick="changeBookingDate(1)">&gt;</button>
+        <button class="btn-today" onclick="goToday()">Hoy</button>
+      </div>
+      <div id="bookingGrid" class="booking-grid" style="overflow-x:auto"></div>
+      <div class="card" style="margin-top:24px">
+        <h2 style="color:white;margin-bottom:16px">Listado de Reservas</h2>
+        <div id="bookingList"></div>
+      </div>
+    </div>
+
+    <!-- ========== CAJA ========== -->
+    <div id="sec-caja" class="section">
+      <div class="page-header">
+        <div><h1>💰 Caja del Dia</h1></div>
+        <button class="btn btn-green btn-lg" onclick="openCashModal()">+ Agregar Movimiento</button>
+      </div>
+      <div class="date-nav">
+        <button onclick="changeCashDate(-1)">&lt;</button>
+        <input type="date" id="cashDateInput" onchange="loadCash()">
+        <button onclick="changeCashDate(1)">&gt;</button>
+        <button class="btn-today" onclick="goCashToday()">Hoy</button>
+      </div>
+      <div id="cashSummary" class="stats-grid" style="margin-bottom:24px"></div>
+      <div class="card">
+        <h2 style="color:white;margin-bottom:16px">Movimientos</h2>
+        <div id="cashList"></div>
+      </div>
+    </div>
+
+    <!-- ========== TIENDA ========== -->
+    <div id="sec-tienda" class="section">
+      <div class="page-header">
+        <div><h1>🛍 Nueva Marina Shop</h1></div>
+        <button class="btn btn-purple btn-lg" onclick="openProductModal()">+ Nuevo Producto</button>
+      </div>
+      <div id="shopFilters" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
+      <div id="productGrid" class="product-grid"></div>
+    </div>
+
+    <!-- ========== TORNEOS ========== -->
+    <div id="sec-torneos" class="section">
+      <div class="page-header">
+        <div><h1>🏆 Torneos & Ligas</h1></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gray btn-sm" onclick="exportTournaments()">📥 Exportar</button>
+          <button class="btn btn-yellow btn-lg" onclick="openTournamentModal()">+ Nuevo Torneo</button>
+        </div>
+      </div>
+      <div id="tournamentList"></div>
+    </div>
+
+    <!-- ========== LIGAS ========== -->
+    <div id="sec-ligas" class="section">
+      <div class="page-header">
+        <div><h1>⚽ Ligas</h1></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gray btn-sm" onclick="exportLeagues()">📥 Exportar</button>
+          <button class="btn btn-green btn-lg" onclick="openLeagueModal()">+ Nueva Liga</button>
+        </div>
+      </div>
+      <div id="leagueList"></div>
+    </div>
+
+    <!-- ========== RANKING ========== -->
+    <div id="sec-ranking" class="section">
+      <div class="page-header">
+        <div><h1>🥇 Ranking</h1></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gray btn-sm" onclick="exportRanking()">📥 Exportar</button>
+          <button class="btn btn-orange btn-sm" onclick="recalcRanking()">🔄 Recalcular</button>
+        </div>
+      </div>
+      <div id="podium" class="grid-3" style="margin-bottom:24px"></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>#</th><th>Jugador</th><th>PJ</th><th>PG</th><th>PP</th><th>G+</th><th>G-</th><th>Puntos</th><th>Win %</th></tr></thead>
+          <tbody id="rankingTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== JUGADORES ========== -->
+    <div id="sec-jugadores" class="section">
+      <div class="page-header">
+        <div><h1>👥 Jugadores</h1></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-gray btn-sm" onclick="exportPlayers()">📥 Exportar</button>
+          <div style="display:flex;background:#374151;border-radius:12px;padding:4px;gap:4px">
+            <button id="viewTableBtn" class="btn btn-sm btn-cyan" onclick="setPlayerView('table')" style="padding:6px 12px">📋 Tabla</button>
+            <button id="viewCardBtn" class="btn btn-sm btn-gray" onclick="setPlayerView('cards')" style="padding:6px 12px">🃏 Cards</button>
+          </div>
+          <button class="btn btn-cyan btn-lg" onclick="openPlayerModal()">+ Nuevo Jugador</button>
+        </div>
+      </div>
+      <div class="search-bar">
+        <span class="icon">🔍</span>
+        <input type="text" id="playerSearch" placeholder="Buscar jugador por nombre, apellido, ciudad, categoria..." oninput="filterPlayers()">
+      </div>
+      <!-- Table View -->
+      <div id="playersTableView" class="card">
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th style="width:50px">Foto</th><th>Nombre Completo</th><th>Categoria</th><th>Ciudad</th><th>Telefono</th><th>Acciones</th></tr></thead>
+            <tbody id="playersTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Card View -->
+      <div id="playersCardView" style="display:none">
+        <div id="playersCardGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>
+      </div>
+    </div>
+
+    <!-- ========== CONFIG ========== -->
+    <div id="sec-config" class="section">
+      <div class="page-header"><div><h1>⚙ Configuracion</h1></div></div>
+      <div class="card" style="margin-bottom:24px">
+        <h2 style="color:white;margin-bottom:16px">Datos del Club & Precios</h2>
+        <div id="configFields"></div>
+        <button class="btn btn-cyan" style="margin-top:16px" onclick="saveConfig()">💾 Guardar Configuracion</button>
+        <span id="configSaved" class="hidden" style="color:#4ade80;margin-left:12px;font-weight:600">Guardado!</span>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h2 style="color:white">🛡 Administradores & Staff</h2>
+          <button class="btn btn-yellow btn-sm" onclick="openStaffModal()">+ Agregar</button>
+        </div>
+        <div id="staffList"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+<!-- Booking Modal -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="bookingModalTitle">Nueva Reserva</h2>
+      <button class="close" onclick="closeModal('bookingModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="bookingStaffBadge" class="staff-badge hidden">
+        <span class="label">Registra:</span>
+        <span class="name" id="bookingStaffName"></span>
+      </div>
+      <div class="form-group">
+        <label>Reserva a nombre de *</label>
+        <input type="text" id="bkName" placeholder="Nombre de quien reserva">
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email</label><input type="email" id="bkEmail" placeholder="email@ejemplo.com"></div>
+        <div class="form-group"><label>Telefono</label><input type="tel" id="bkPhone" placeholder="+34 600 000 000"></div>
+      </div>
+      <div class="form-group">
+        <label>Jugadores (separados por coma)</label>
+        <input type="text" id="bkPlayers" placeholder="Ej: Juan, Pedro, Maria, Ana">
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Pista</label><select id="bkCourt"><option value="1">Pista 1</option><option value="2">Pista 2</option><option value="3">Pista 3</option><option value="4">Pista 4</option></select></div>
+        <div class="form-group"><label>Fecha</label><input type="date" id="bkDate"></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Hora</label><select id="bkTime"></select></div>
+        <div class="form-group"><label>Duracion</label><select id="bkDuration"><option value="60">1 hora</option><option value="90">1.5 horas</option><option value="120">2 horas</option></select></div>
+        <div class="form-group"><label>Precio (EUR)</label><input type="number" id="bkPrice" step="0.5" value="15"></div>
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <div class="status-buttons">
+          <button type="button" class="btn-green" onclick="setBookingStatus('confirmed',this)">Confirmada</button>
+          <button type="button" class="inactive" onclick="setBookingStatus('pending',this)">Pendiente</button>
+          <button type="button" class="inactive" onclick="setBookingStatus('cancelled',this)">Cancelada</button>
+        </div>
+      </div>
+      <div class="form-group"><label>Notas</label><textarea id="bkNotes" rows="2" placeholder="Notas opcionales..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('bookingModal')">Cancelar</button>
+      <button class="btn btn-lime" onclick="saveBooking()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cash Modal -->
+<div class="modal-overlay" id="cashModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Nuevo Movimiento</h2><button class="close" onclick="closeModal('cashModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Concepto *</label><input type="text" id="cashConcept" placeholder="Ej: Venta de pelotas"></div>
+      <div class="form-group"><label>Monto (EUR) * <span style="color:#64748b">(negativo para egresos)</span></label><input type="number" id="cashAmount" step="0.01" placeholder="15.00"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('cashModal')">Cancelar</button>
+      <button class="btn btn-green" onclick="saveCash()">💾 Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Player Modal -->
+<div class="modal-overlay" id="playerModal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header"><h2 id="playerModalTitle">Nuevo Jugador</h2><button class="close" onclick="closeModal('playerModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Nombre *</label><input type="text" id="plName" placeholder="Nombre"></div>
+        <div class="form-group"><label>Apellido *</label><input type="text" id="plLastName" placeholder="Apellido"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Genero</label><select id="plGender"><option value="">— Seleccionar —</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
+        <div class="form-group"><label>DNI / Documento</label><input type="text" id="plDni" placeholder="12345678A"></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Edad</label><input type="number" id="plAge" placeholder="25" min="0" max="120"></div>
+        <div class="form-group"><label>Fecha Nacimiento</label><input type="date" id="plBirthDate"></div>
+        <div class="form-group"><label>Ciudad / Localidad</label><input type="text" id="plCity" placeholder="Murcia"></div>
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="plCategory">
+          <option value="">— Sin categoria —</option>
+          <option value="1ra">1ra</option><option value="2da">2da</option><option value="3ra">3ra</option>
+          <option value="4ta">4ta</option><option value="5ta">5ta</option><option value="6ta">6ta</option>
+          <option value="7ma">7ma</option><option value="8va">8va</option>
+          <option value="Sin categoria">Sin categoria</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email</label><input type="email" id="plEmail" placeholder="email@ejemplo.com"></div>
+        <div class="form-group"><label>Telefono</label><input type="tel" id="plPhone" placeholder="+34 600 000 000"></div>
+      </div>
+      <div class="form-group"><label>Telefono Emergencia</label><input type="tel" id="plEmergencyPhone" placeholder="+34 600 000 000"></div>
+      <div class="form-group"><label>Foto URL</label><input type="text" id="plPhotoUrl" placeholder="URL de foto del jugador"></div>
+      <div class="form-group"><label>Notas</label><textarea id="plNotes" rows="2" placeholder="Notas opcionales sobre el jugador..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('playerModal')">Cancelar</button>
+      <button class="btn btn-cyan" onclick="savePlayer()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="productModalTitle">Nuevo Producto</h2><button class="close" onclick="closeModal('productModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nombre *</label><input type="text" id="prName" placeholder="Nombre del producto"></div>
+      <div class="form-group"><label>Categoria</label><select id="prCategory"><option>Paletas</option><option>Pelotas</option><option>Grips</option><option>Accesorios</option><option>Bolsos</option><option>Zapatillas</option><option>Ropa</option><option>Otro</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Precio (EUR)</label><input type="number" id="prPrice" step="0.01" value="0"></div>
+        <div class="form-group"><label>Stock</label><input type="number" id="prStock" value="0"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('productModal')">Cancelar</button>
+      <button class="btn btn-purple" onclick="saveProduct()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sale Modal -->
+<div class="modal-overlay" id="saleModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h2>Registrar Venta</h2><button class="close" onclick="closeModal('saleModal')">✕</button></div>
+    <div class="modal-body" style="text-align:center">
+      <p style="color:white;font-size:18px;font-weight:700" id="saleName"></p>
+      <p style="color:#84cc16;font-size:28px;font-weight:700;margin:8px 0" id="salePrice"></p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0">
+        <button class="btn btn-gray" onclick="changeSaleQty(-1)">-</button>
+        <span style="color:white;font-size:32px;font-weight:700;width:48px;text-align:center" id="saleQty">1</span>
+        <button class="btn btn-gray" onclick="changeSaleQty(1)">+</button>
+      </div>
+      <div style="background:rgba(51,65,85,0.5);border-radius:12px;padding:16px;margin:16px 0">
+        <p style="color:#64748b;font-size:12px">Total</p>
+        <p style="color:#84cc16;font-size:32px;font-weight:700" id="saleTotal"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('saleModal')">Cancelar</button>
+      <button class="btn btn-green" onclick="confirmSale()">🛒 Confirmar Venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Staff Modal -->
+<div class="modal-overlay" id="staffModal">
+  <div class="modal">
+    <div class="modal-header"><h2>Nuevo Usuario</h2><button class="close" onclick="closeModal('staffModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nombre completo *</label><input type="text" id="stName" placeholder="Nombre"></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="stEmail" placeholder="email@ejemplo.com"></div>
+      <div class="form-group">
+        <label>Contrasena *</label>
+        <div style="position:relative">
+          <input type="password" id="stPassword" placeholder="Min. 6 caracteres">
+          <button type="button" onclick="togglePassword('stPassword', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:18px">👁</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Rol</label>
+        <div class="form-row">
+          <button type="button" class="btn btn-yellow" id="roleAdmin" onclick="setStaffRole('admin')">🛡 Admin</button>
+          <button type="button" class="btn btn-gray" id="roleStaff" onclick="setStaffRole('staff')">👤 Staff</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('staffModal')">Cancelar</button>
+      <button class="btn btn-yellow" onclick="saveStaff()">💾 Crear Usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tournament Modal -->
+<div class="modal-overlay" id="tournamentModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="tournamentModalTitle">Nuevo Torneo</h2><button class="close" onclick="closeModal('tournamentModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nombre del Torneo *</label><input type="text" id="trName" placeholder="Ej: Torneo Apertura 2026"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Fecha Inicio</label><input type="date" id="trStartDate"></div>
+        <div class="form-group"><label>Fecha Fin</label><input type="date" id="trEndDate"></div>
+      </div>
+      <div class="form-group">
+        <label>Formato</label>
+        <select id="trFormat">
+          <option value="premier">Premier Padel (Eliminatorio 32-48)</option>
+          <option value="americano">Americano (Rotacion parejas)</option>
+          <option value="mexicano">Mexicano (Ranking en vivo)</option>
+          <option value="americano_mixto">Americano Mixto (Hombre+Mujer)</option>
+          <option value="eliminatorio">Eliminatorio Clasico</option>
+          <option value="round_robin">Round Robin + Playoff</option>
+          <option value="express">Express/Relampago (1 jornada)</option>
+          <option value="team">Team Championship (Equipos)</option>
+          <option value="fip_amateur">FIP Beyond (Amateur +40/+50)</option>
+          <option value="pro_league">Pro Padel League (Franquicias)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="trStatus"><option value="upcoming">Proximo</option><option value="active">En Curso</option><option value="finished">Finalizado</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('tournamentModal')">Cancelar</button>
+      <button class="btn btn-yellow" onclick="saveTournament()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- League Modal -->
+<div class="modal-overlay" id="leagueModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="leagueModalTitle">Nueva Liga</h2><button class="close" onclick="closeModal('leagueModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nombre de la Liga *</label><input type="text" id="lgName" placeholder="Ej: Liga Nocturna Primavera 2026"></div>
+      <div class="form-group">
+        <label>Formato de Liga</label>
+        <select id="lgFormat">
+          <option value="regular">Regular por Categorias (1a-5a)</option>
+          <option value="mixta">Mixta (Hombre+Mujer)</option>
+          <option value="interempresas">Interempresas</option>
+          <option value="interclub">Interclub</option>
+          <option value="ladder">Ladder/Escalera</option>
+          <option value="nocturna">Nocturna (20h-23h)</option>
+          <option value="puntos">Por Puntos Individual</option>
+          <option value="femenina">Femenina</option>
+          <option value="social">Social/Recreativa</option>
+          <option value="ascenso">Con Ascenso/Descenso</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Categoria</label><input type="text" id="lgCategory" placeholder="Ej: 5ta, Mixta, Abierta"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Fecha Inicio</label><input type="date" id="lgStartDate"></div>
+        <div class="form-group"><label>Fecha Fin</label><input type="date" id="lgEndDate"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Max Equipos</label><input type="number" id="lgMaxTeams" value="16"></div>
+        <div class="form-group"><label>Cuota (EUR)</label><input type="number" id="lgFee" step="0.01" value="0"></div>
+      </div>
+      <div class="form-group"><label>Sistema de Puntuacion</label><input type="text" id="lgScoring" placeholder="Ej: 2 pts victoria, 0 derrota" value="2 pts victoria, 0 derrota"></div>
+      <div class="form-group"><label>Descripcion</label><textarea id="lgDesc" rows="2" placeholder="Descripcion de la liga..."></textarea></div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="lgStatus"><option value="upcoming">Proxima</option><option value="active">En Curso</option><option value="finished">Finalizada</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray" onclick="closeModal('leagueModal')">Cancelar</button>
+      <button class="btn btn-green" onclick="saveLeague()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Player cards */
+  .player-card{background:#1e293b;border-radius:16px;border:1px solid #334155;padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:border-color .2s}
+  .player-card:hover{border-color:rgba(6,182,212,0.4)}
+  .player-card .avatar{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:white;margin-bottom:12px;overflow:hidden;flex-shrink:0}
+  .player-card .avatar img{width:100%;height:100%;object-fit:cover}
+  .player-card .pc-name{color:white;font-size:16px;font-weight:700;margin-bottom:4px}
+  .player-card .pc-detail{color:#94a3b8;font-size:13px;margin-bottom:2px}
+  .player-card .pc-actions{display:flex;gap:8px;margin-top:12px}
+  .player-table-avatar{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;overflow:hidden;flex-shrink:0}
+  .player-table-avatar img{width:100%;height:100%;object-fit:cover}
+</style>
+<script src="js/config.js"></script>
+<script src="js/formats.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

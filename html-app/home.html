@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nueva Marina Padel & Sport — Reservas de Pistas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:#030712;color:#f8fafc}
+    a{color:#06b6d4;text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+
+    /* Navbar */
+    .navbar{background:rgba(15,23,42,0.95);backdrop-filter:blur(12px);position:fixed;top:0;left:0;right:0;z-index:50;border-bottom:1px solid #1e293b}
+    .navbar .inner{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;max-width:1200px;margin:0 auto}
+    .navbar .logo{display:flex;align-items:center;gap:12px}
+    .navbar .logo .icon{width:40px;height:40px;background:linear-gradient(135deg,#06b6d4,#0891b2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:14px}
+    .navbar .logo span{color:white;font-weight:700;font-size:18px}
+    .navbar .links{display:flex;gap:24px;align-items:center}
+    .navbar .links a{color:#94a3b8;font-size:14px;font-weight:500;transition:color .2s}
+    .navbar .links a:hover{color:white}
+    .navbar .btn-login{padding:10px 24px;background:#06b6d4;color:white;border-radius:12px;font-weight:700;font-size:14px;transition:all .2s}
+    .navbar .btn-login:hover{background:#22d3ee}
+
+    /* Hero */
+    .hero{padding:140px 20px 80px;text-align:center;background:linear-gradient(180deg,rgba(6,182,212,0.08) 0%,transparent 60%)}
+    .hero .badge{display:inline-block;padding:6px 16px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);border-radius:999px;color:#22d3ee;font-size:13px;font-weight:600;margin-bottom:24px}
+    .hero h1{font-size:clamp(36px,6vw,64px);font-weight:900;color:white;line-height:1.1;margin-bottom:16px}
+    .hero h1 span{background:linear-gradient(135deg,#06b6d4,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero p{color:#94a3b8;font-size:18px;max-width:600px;margin:0 auto 32px}
+    .hero .ctas{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+    .hero .ctas a{padding:16px 32px;border-radius:14px;font-weight:700;font-size:16px;transition:all .2s}
+    .hero .cta-primary{background:#06b6d4;color:white;box-shadow:0 10px 30px rgba(6,182,212,0.3)}
+    .hero .cta-primary:hover{background:#22d3ee;transform:translateY(-2px)}
+    .hero .cta-secondary{background:rgba(30,41,59,0.8);color:white;border:1px solid #334155}
+    .hero .cta-secondary:hover{border-color:#06b6d4}
+
+    /* Services */
+    .services{padding:80px 20px}
+    .services .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:1200px;margin:0 auto}
+    .service-card{background:#0f172a;border:1px solid #1e293b;border-radius:20px;padding:32px;text-align:center;transition:all .3s}
+    .service-card:hover{border-color:#06b6d4;transform:translateY(-4px)}
+    .service-card .icon{font-size:48px;margin-bottom:16px}
+    .service-card h3{color:white;font-size:20px;font-weight:700;margin-bottom:8px}
+    .service-card p{color:#64748b;font-size:14px;line-height:1.6}
+
+    /* Availability */
+    .availability{padding:80px 20px;background:#0f172a}
+    .section-title{text-align:center;margin-bottom:40px}
+    .section-title h2{color:white;font-size:32px;font-weight:800;margin-bottom:8px}
+    .section-title p{color:#64748b;font-size:16px}
+    .avail-grid{max-width:900px;margin:0 auto;background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden}
+    .avail-grid .header{display:flex;border-bottom:1px solid #334155}
+    .avail-grid .header div{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:700}
+    .avail-grid .header div:first-child{width:60px;flex:none}
+    .avail-grid .row{display:flex;border-bottom:1px solid rgba(51,65,85,0.3)}
+    .avail-grid .row div{flex:1;padding:8px;text-align:center;font-size:12px}
+    .avail-grid .row div:first-child{width:60px;flex:none;color:#64748b;font-family:monospace}
+    .avail-grid .row .free{color:rgba(34,197,94,0.5)}
+    .avail-grid .row .taken{background:rgba(239,68,68,0.1);color:#f87171}
+
+    /* Tournaments */
+    .tournaments{padding:80px 20px}
+    .tournament-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;max-width:1200px;margin:0 auto}
+    .tournament-card{background:#0f172a;border:1px solid #1e293b;border-radius:20px;overflow:hidden;transition:all .3s}
+    .tournament-card:hover{border-color:#f59e0b}
+    .tournament-card .top{background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.2));padding:24px}
+    .tournament-card .top h3{color:white;font-size:20px;font-weight:700}
+    .tournament-card .top p{color:#94a3b8;font-size:13px;margin-top:4px}
+    .tournament-card .body{padding:24px}
+
+    /* Shop */
+    .shop{padding:80px 20px;background:#0f172a}
+    .shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:1200px;margin:0 auto}
+    .shop-card{background:#1e293b;border-radius:16px;padding:20px;text-align:center;border:1px solid #334155;transition:all .3s}
+    .shop-card:hover{border-color:#8b5cf6}
+    .shop-card .emoji{font-size:36px;margin-bottom:8px}
+    .shop-card h4{color:white;font-size:14px;font-weight:600}
+    .shop-card .price{color:#84cc16;font-size:18px;font-weight:700;margin-top:4px}
+
+    /* Footer */
+    .footer{background:#0f172a;border-top:1px solid #1e293b;padding:40px 20px;text-align:center}
+    .footer p{color:#475569;font-size:13px}
+
+    /* Date nav */
+    .date-nav-pub{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:24px}
+    .date-nav-pub button,.date-nav-pub input{padding:8px 12px;background:#374151;border:1px solid #4b5563;border-radius:8px;color:white;font-size:13px;cursor:pointer}
+
+    @media(max-width:768px){
+      .navbar .links{display:none}
+      .hero h1{font-size:32px}
+      .avail-grid .header div,.avail-grid .row div{font-size:10px;padding:6px 2px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="inner">
+    <div class="logo"><div class="icon">MN</div><span>Nueva Marina</span></div>
+    <div class="links">
+      <a href="#servicios">Servicios</a>
+      <a href="#disponibilidad">Disponibilidad</a>
+      <a href="#torneos">Torneos</a>
+      <a href="#tienda">Tienda</a>
+      <a href="index.html" class="btn-login">Reservar / Login</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <span class="badge">🎾 Club de Padel en Espana</span>
+  <h1>Reserva tu pista en<br><span>Nueva Marina</span></h1>
+  <p>4 pistas de padel, torneos, ligas, tienda y mucho mas. Reserva online en segundos.</p>
+  <div class="ctas">
+    <a href="index.html" class="cta-primary">Reservar Pista</a>
+    <a href="#disponibilidad" class="cta-secondary">Ver Disponibilidad</a>
+  </div>
+</section>
+
+<!-- Services -->
+<section class="services" id="servicios">
+  <div class="grid">
+    <div class="service-card"><div class="icon">📅</div><h3>Reservas Online</h3><p>4 pistas disponibles de 08:00 a 00:00. Reserva tu horario en segundos desde el celular.</p></div>
+    <div class="service-card"><div class="icon">🏆</div><h3>Torneos & Ligas</h3><p>Americano, Mexicano, Eliminatorio, Ligas por categorias. Competicion para todos los niveles.</p></div>
+    <div class="service-card"><div class="icon">🛍</div><h3>Nueva Marina Shop</h3><p>Paletas, pelotas, grips, zapatillas y accesorios de las mejores marcas de padel.</p></div>
+    <div class="service-card"><div class="icon">📊</div><h3>Ranking & Estadisticas</h3><p>Seguimiento de tu rendimiento, ranking de jugadores y estadisticas de torneos.</p></div>
+  </div>
+</section>
+
+<!-- Availability -->
+<section class="availability" id="disponibilidad">
+  <div class="section-title">
+    <h2>Disponibilidad de Pistas</h2>
+    <p>Consulta los horarios libres y reserva tu pista</p>
+  </div>
+  <div class="date-nav-pub">
+    <button onclick="changeHomDate(-1)">&lt;</button>
+    <input type="date" id="homDate" onchange="loadHomeAvailability()">
+    <button onclick="changeHomDate(1)">&gt;</button>
+    <button onclick="document.getElementById('homDate').value=new Date().toISOString().split('T')[0];loadHomeAvailability()" style="background:#06b6d4">Hoy</button>
+  </div>
+  <div id="homeAvailGrid" class="avail-grid"></div>
+  <p style="text-align:center;margin-top:24px"><a href="index.html" style="padding:12px 32px;background:#06b6d4;color:white;border-radius:12px;font-weight:700;display:inline-block">Reservar una Pista</a></p>
+</section>
+
+<!-- Tournaments -->
+<section class="tournaments" id="torneos">
+  <div class="section-title">
+    <h2>Torneos & Ligas</h2>
+    <p>Proximos eventos y competiciones</p>
+  </div>
+  <div id="homeTournaments" class="tournament-grid"></div>
+</section>
+
+<!-- Shop -->
+<section class="shop" id="tienda">
+  <div class="section-title">
+    <h2>Nueva Marina Shop</h2>
+    <p>Equipamiento de las mejores marcas</p>
+  </div>
+  <div id="homeProducts" class="shop-grid"></div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>Nueva Marina Padel & Sport © 2026 — <a href="https://www.nuevamarina.es">www.nuevamarina.es</a></p>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://vsgrwnfjzmovmnxjzkea.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzZ3J3bmZqem1vdm1ueGp6a2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU2NjUsImV4cCI6MjA5MTMzMTY2NX0.NqloeK1MRv940jYWW4HiARS96-Sbc_OMEqTtWgpMsCM'
+const { createClient } = window.supabase
+const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+const COURT_COLORS = ['#22c55e','#3b82f6','#f59e0b','#ef4444']
+const courts = [{id:1,name:'Pista 1'},{id:2,name:'Pista 2'},{id:3,name:'Pista 3'},{id:4,name:'Pista 4'}]
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('homDate').value = new Date().toISOString().split('T')[0]
+  loadHomeAvailability()
+  loadHomeTournaments()
+  loadHomeProducts()
+})
+
+function generateSlots(start, end, interval) {
+  const slots = []
+  for (let h = start; h < (end === 0 ? 24 : end); h++)
+    for (let m = 0; m < 60; m += interval)
+      slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`)
+  if (end === 0) slots.push('00:00')
+  return slots
+}
+
+async function loadHomeAvailability() {
+  const date = document.getElementById('homDate').value
+  const { data } = await db.from('bookings').select('court_id,start_time,end_time,status').eq('date', date).neq('status', 'cancelled')
+  const bookings = data || []
+  const slots = generateSlots(8, 0, 60)
+  let html = '<div class="header"><div>Hora</div>'
+  courts.forEach((c, i) => { html += `<div style="color:${COURT_COLORS[i]}">${c.name}</div>` })
+  html += '</div>'
+  slots.forEach(t => {
+    html += '<div class="row"><div>' + t + '</div>'
+    courts.forEach(c => {
+      const occ = bookings.some(b => {
+        const s = b.start_time?.substring(0,5) || '', e = b.end_time?.substring(0,5) || ''
+        return b.court_id === c.id && t >= s && t < e
+      })
+      html += `<div class="${occ ? 'taken' : 'free'}">${occ ? 'Reservado' : '—'}</div>`
+    })
+    html += '</div>'
+  })
+  document.getElementById('homeAvailGrid').innerHTML = html
+}
+
+function changeHomDate(days) {
+  const input = document.getElementById('homDate')
+  const d = new Date(input.value); d.setDate(d.getDate() + days)
+  input.value = d.toISOString().split('T')[0]; loadHomeAvailability()
+}
+
+async function loadHomeTournaments() {
+  const [tRes, lRes] = await Promise.all([
+    db.from('tournaments').select('*').in('status', ['upcoming', 'active']).order('start_date').limit(6),
+    db.from('leagues').select('*').in('status', ['upcoming', 'active']).order('start_date').limit(6),
+  ])
+  const items = [...(tRes.data || []).map(t => ({...t, _type: 'torneo'})), ...(lRes.data || []).map(l => ({...l, _type: 'liga'}))]
+  document.getElementById('homeTournaments').innerHTML = items.length === 0 ?
+    '<p style="color:#64748b;text-align:center;padding:32px;grid-column:1/-1">No hay eventos programados por ahora</p>' :
+    items.map(t => `<div class="tournament-card"><div class="top"><span style="font-size:12px;opacity:0.7">${t._type === 'torneo' ? '🏆 Torneo' : '⚽ Liga'}</span><h3>${t.name}</h3><p>${t.start_date ? new Date(t.start_date).toLocaleDateString('es-ES', {day:'numeric',month:'long',year:'numeric'}) : ''}</p></div><div class="body"><span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;${t.status==='active'?'background:rgba(34,197,94,0.2);color:#4ade80':'background:rgba(59,130,246,0.2);color:#60a5fa'}">${t.status==='active'?'En Curso':'Proximo'}</span>${t.entry_fee > 0 ? `<span style="margin-left:8px;color:#84cc16;font-weight:700">${t.entry_fee}€</span>` : ''}<p style="margin-top:12px"><a href="index.html" style="color:#06b6d4;font-weight:600">Inscribirse →</a></p></div></div>`).join('')
+}
+
+async function loadHomeProducts() {
+  const { data } = await db.from('products').select('*').eq('is_active', true).order('category').limit(12)
+  const products = data || []
+  document.getElementById('homeProducts').innerHTML = products.length === 0 ?
+    '<p style="color:#64748b;text-align:center;padding:32px;grid-column:1/-1">Proximamente...</p>' :
+    products.map(p => `<div class="shop-card"><div class="emoji">📦</div><h4>${p.name}</h4><div class="price">${Number(p.price).toFixed(2)}€</div></div>`).join('')
+}
+</script>
+</body>
+</html>
