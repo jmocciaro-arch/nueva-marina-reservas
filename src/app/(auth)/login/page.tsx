@@ -21,14 +21,21 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError('Email o contraseña incorrectos')
       setLoading(false)
       return
     }
-    router.push('/')
-    router.refresh()
+    // Wait for session to be fully set before navigating
+    if (data?.session) {
+      // Small delay to ensure cookies are set
+      await new Promise(r => setTimeout(r, 200))
+      window.location.href = '/'
+    } else {
+      setError('Error al iniciar sesión. Intentá de nuevo.')
+      setLoading(false)
+    }
   }
 
   return (
