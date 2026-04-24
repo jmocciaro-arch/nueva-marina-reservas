@@ -1,22 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
 
-const PUBLIC_ROUTES = ['/login', '/horarios', '/api', '/auth']
-
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  const isPublic = PUBLIC_ROUTES.some(route => pathname.startsWith(route))
-  if (isPublic) return NextResponse.next()
-
-  try {
-    return await updateSession(request)
-  } catch (e) {
-    // If middleware fails, allow access rather than redirect loop
-    console.error('Middleware error:', e)
-    return NextResponse.next()
-  }
+// This project is deprecated. Every request is redirected to the live
+// system at nueva-marina-app.vercel.app with a permanent 308 redirect,
+// preserving the path and query string so bookmarks keep working.
+export function middleware(request: NextRequest) {
+  const target = new URL(
+    request.nextUrl.pathname + request.nextUrl.search,
+    'https://nueva-marina-app.vercel.app',
+  )
+  return NextResponse.redirect(target, 308)
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico)$).*)'],
+  matcher: ['/((?!_next/static|_next/image).*)'],
 }
