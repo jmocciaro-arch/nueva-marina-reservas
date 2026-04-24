@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "destination": "https://nueva-marina-app.vercel.app/:path*",
+      "permanent": true
+    }
+  ]
+}
