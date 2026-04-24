@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       const html = `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0f172a;color:#fff;border-radius:16px;overflow:hidden">
           <div style="background:linear-gradient(135deg,#06b6d4,#0891b2);padding:30px;text-align:center">
-            <h1 style="margin:0;font-size:28px;color:#fff">🎾 Nueva Marina</h1>
+            <img src="https://www.nuevamarina.es/wp-content/uploads/2026/02/LOGONUEVAMARINA_pantone319C_pantone432C-1.png" alt="Nueva Marina Pádel & Sport" width="280" style="max-width:280px;height:auto;display:block;margin:0 auto"/>
             <p style="margin:5px 0 0;color:#e0f2fe;font-size:14px">Pádel & Sport — Confirmación de Reserva</p>
           </div>
           <div style="padding:30px">
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       const html = `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0f172a;color:#fff;border-radius:16px;overflow:hidden">
           <div style="background:linear-gradient(135deg,#06b6d4,#0891b2);padding:30px;text-align:center">
-            <h1 style="margin:0;font-size:28px;color:#fff">🎾 Nueva Marina</h1>
+            <img src="https://www.nuevamarina.es/wp-content/uploads/2026/02/LOGONUEVAMARINA_pantone319C_pantone432C-1.png" alt="Nueva Marina Pádel & Sport" width="280" style="max-width:280px;height:auto;display:block;margin:0 auto"/>
             <p style="margin:5px 0 0;color:#e0f2fe;font-size:14px">Pádel & Sport</p>
           </div>
           <div style="padding:30px">

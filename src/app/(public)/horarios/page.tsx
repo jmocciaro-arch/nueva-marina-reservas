@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { generateTimeSlots, COURT_COLORS } from '@/lib/utils'
 import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Phone, Clock, Trophy, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function HorariosPublicPage() {
   const [bookings, setBookings] = useState<any[]>([])
@@ -46,11 +47,10 @@ export default function HorariosPublicPage() {
       {/* Hero */}
       <div className="bg-gradient-to-br from-cyan-600 via-cyan-700 to-gray-900 py-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur rounded-2xl mb-6">
-            <span className="text-4xl font-black text-white">MN</span>
+          <div className="inline-flex items-center justify-center mb-6">
+            <Image src="/logo-marina.png" alt="Nueva Marina Pádel & Sport" width={420} height={297} priority className="h-auto w-[320px] md:w-[420px]" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">Nueva Marina</h1>
-          <p className="text-cyan-200 text-lg mb-6">Pádel & Sport — Reservá tu pista</p>
+          <p className="text-cyan-200 text-lg mb-6">Reservá tu pista</p>
           <div className="flex flex-wrap justify-center gap-4 text-sm text-cyan-100">
             <span className="flex items-center gap-2"><Clock size={16} /> 08:00 - 00:00</span>
             <span className="flex items-center gap-2"><MapPin size={16} /> España</span>

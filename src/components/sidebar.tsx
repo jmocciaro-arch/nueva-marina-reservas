@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -10,6 +11,7 @@ import {
   DollarSign,
   ShoppingBag,
   Trophy,
+  Swords,
   Medal,
   Users,
   Settings,
@@ -25,6 +27,7 @@ const navItems = [
   { href: '/caja', label: 'Caja', icon: DollarSign, color: 'text-green-400' },
   { href: '/tienda', label: 'NM Shop', icon: ShoppingBag, color: 'text-purple-400' },
   { href: '/torneos', label: 'Torneos', icon: Trophy, color: 'text-yellow-400' },
+  { href: '/admin/ligas', label: 'Ligas', icon: Swords, color: 'text-pink-400' },
   { href: '/ranking', label: 'Ranking', icon: Medal, color: 'text-orange-400' },
   { href: '/jugadores', label: 'Jugadores', icon: Users, color: 'text-cyan-400' },
   { href: '/config', label: 'Configuración', icon: Settings, color: 'text-gray-400' },
@@ -51,8 +54,8 @@ export default function Sidebar() {
     <>
       <div className="p-6 border-b border-gray-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-lime-400 rounded-xl flex items-center justify-center">
-            <span className="text-xl">🎾</span>
+          <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 shrink-0">
+            <Image src="/icons/icon-512.png" alt="Nueva Marina" width={44} height={44} className="w-full h-full object-contain" priority />
           </div>
           <div>
             <h1 className="text-white font-bold text-lg leading-tight">Nueva Marina</h1>

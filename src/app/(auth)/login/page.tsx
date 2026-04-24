@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { LogIn, Eye, EyeOff } from 'lucide-react'
@@ -42,11 +43,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-2xl mb-4 shadow-lg shadow-cyan-500/30">
-            <span className="text-5xl font-black text-white">MN</span>
+          <div className="inline-flex items-center justify-center mb-6">
+            <Image src="/logo-marina.png" alt="Nueva Marina Pádel & Sport" width={320} height={226} priority className="h-auto w-[280px]" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Nueva Marina</h1>
-          <p className="text-gray-400 mt-1">Pádel & Sport — Reservas</p>
+          <p className="text-gray-400">Reservas — Acceso al sistema</p>
         </div>
 
         <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl border border-gray-700">

@@ -76,6 +76,7 @@ export interface Sale {
 
 export type TournamentStatus = 'upcoming' | 'active' | 'finished'
 export type TournamentFormat = 'elimination' | 'preliminary' | 'groups'
+export type TournamentKind = 'tournament' | 'league'
 
 export interface Tournament {
   id: number
@@ -84,6 +85,8 @@ export interface Tournament {
   end_date: string | null
   status: TournamentStatus
   format: TournamentFormat
+  kind: TournamentKind
+  cover_image_url: string | null
   created_at: string
 }
 

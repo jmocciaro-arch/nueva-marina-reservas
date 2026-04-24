@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { exportToExcel } from '@/lib/export-excel'
-import type { Tournament, TournamentCategory, TournamentRegistration, Match } from '@/lib/types'
-import { Trophy, ArrowLeft, Users, Swords, Download, Trash2, Play, Edit2, Save, X } from 'lucide-react'
+import type { Tournament, TournamentCategory, TournamentRegistration, Match, Player, RegistrationStatus } from '@/lib/types'
+import { Trophy, ArrowLeft, Users, Swords, Download, Trash2, Play, Edit2, Save, X, UserPlus } from 'lucide-react'
 
 export default function TournamentDetailPage() {
   const params = useParams()
@@ -15,25 +15,37 @@ export default function TournamentDetailPage() {
   const [categories, setCategories] = useState<TournamentCategory[]>([])
   const [registrations, setRegistrations] = useState<TournamentRegistration[]>([])
   const [matches, setMatches] = useState<Match[]>([])
+  const [players, setPlayers] = useState<Player[]>([])
   const [selectedCat, setSelectedCat] = useState<number | null>(null)
   const [showScoreModal, setShowScoreModal] = useState(false)
   const [editingMatch, setEditingMatch] = useState<Match | null>(null)
   const [score, setScore] = useState({ set1_t1: '', set1_t2: '', set2_t1: '', set2_t2: '', set3_t1: '', set3_t2: '' })
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showRegModal, setShowRegModal] = useState(false)
+  const emptyReg = {
+    category_id: 0,
+    player1_name: '', player1_email: '', player1_phone: '',
+    player2_name: '', player2_email: '', player2_phone: '',
+    status: 'confirmed' as RegistrationStatus,
+  }
+  const [newReg, setNewReg] = useState(emptyReg)
+  const [focusedField, setFocusedField] = useState<'p1' | 'p2' | null>(null)
   const supabase = createClient()
 
   const loadData = useCallback(async () => {
-    const [tRes, catRes, regRes, matchRes] = await Promise.all([
+    const [tRes, catRes, regRes, matchRes, playersRes] = await Promise.all([
       supabase.from('tournaments').select('*').eq('id', id).single(),
       supabase.from('tournament_categories').select('*').eq('tournament_id', id),
       supabase.from('tournament_registrations').select('*').eq('tournament_id', id).order('created_at'),
       supabase.from('matches').select('*').eq('tournament_id', id).order('round').order('position'),
+      supabase.from('players').select('*').order('name'),
     ])
     setTournament(tRes.data)
     setCategories(catRes.data || [])
     setRegistrations(regRes.data || [])
     setMatches(matchRes.data || [])
+    setPlayers(playersRes.data || [])
     if (catRes.data?.[0] && !selectedCat) setSelectedCat(catRes.data[0].id)
   }, [id, selectedCat])
 
@@ -135,6 +147,44 @@ export default function TournamentDetailPage() {
     setDeleteConfirm(null); loadData()
   }
 
+  function openRegModal() {
+    setNewReg({ ...emptyReg, category_id: selectedCat || categories[0]?.id || 0 })
+    setFocusedField(null)
+    setShowRegModal(true)
+  }
+
+  async function saveRegistration() {
+    if (!newReg.category_id || !newReg.player1_name.trim() || !newReg.player2_name.trim()) return
+    setLoading(true)
+    await supabase.from('tournament_registrations').insert({
+      tournament_id: id,
+      category_id: newReg.category_id,
+      player1_name: newReg.player1_name.trim(),
+      player1_email: newReg.player1_email.trim() || null,
+      player1_phone: newReg.player1_phone.trim() || null,
+      player2_name: newReg.player2_name.trim(),
+      player2_email: newReg.player2_email.trim() || null,
+      player2_phone: newReg.player2_phone.trim() || null,
+      status: newReg.status,
+    })
+    setShowRegModal(false); setLoading(false); loadData()
+  }
+
+  function pickPlayer(slot: 'p1' | 'p2', p: Player) {
+    if (slot === 'p1') {
+      setNewReg({ ...newReg, player1_name: p.name, player1_email: p.email || '', player1_phone: p.phone || '' })
+    } else {
+      setNewReg({ ...newReg, player2_name: p.name, player2_email: p.email || '', player2_phone: p.phone || '' })
+    }
+    setFocusedField(null)
+  }
+
+  function matchesFor(query: string) {
+    const q = query.trim().toLowerCase()
+    if (q.length < 2) return []
+    return players.filter(p => p.name.toLowerCase().includes(q)).slice(0, 6)
+  }
+
   function getTeamName(regId: number | null) {
     if (!regId) return 'BYE'
     const reg = registrations.find(r => r.id === regId)
@@ -163,15 +213,31 @@ export default function TournamentDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.push('/torneos')} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-gray-300"><ArrowLeft size={20} /></button>
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Trophy className="text-yellow-400" size={28} /> {tournament.name}
-          </h1>
-          <p className="text-gray-400">{new Date(tournament.start_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      {tournament.cover_image_url ? (
+        <div className="relative rounded-2xl overflow-hidden border border-gray-700">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={tournament.cover_image_url} alt={tournament.name} className="w-full h-48 md:h-64 object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
+          <button onClick={() => router.push('/torneos')}
+            className="absolute top-4 left-4 p-2 bg-black/60 hover:bg-black/80 rounded-xl text-white"><ArrowLeft size={20} /></button>
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3 drop-shadow-lg">
+              <Trophy className="text-yellow-400" size={28} /> {tournament.name}
+            </h1>
+            <p className="text-gray-200 drop-shadow">{new Date(tournament.start_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.push('/torneos')} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-gray-300"><ArrowLeft size={20} /></button>
+          <div>
+            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+              <Trophy className="text-yellow-400" size={28} /> {tournament.name}
+            </h1>
+            <p className="text-gray-400">{new Date(tournament.start_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          </div>
+        </div>
+      )}
 
       {/* Category Tabs */}
       {categories.length > 0 && (
@@ -192,6 +258,10 @@ export default function TournamentDetailPage() {
             <Users size={20} className="text-green-400" /> Inscriptos ({catRegistrations.length} parejas)
           </h2>
           <div className="flex gap-2">
+            <button onClick={openRegModal} disabled={categories.length === 0}
+              className="flex items-center gap-1 px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-lg font-bold text-sm disabled:opacity-50">
+              <UserPlus size={14} /> Inscribir pareja
+            </button>
             <button onClick={handleExportRegs} className="flex items-center gap-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm">
               <Download size={14} /> Excel
             </button>
@@ -272,6 +342,90 @@ export default function TournamentDetailPage() {
                   </div>
                 )
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Registration Modal */}
+      {showRegModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl w-full max-w-lg border border-gray-700 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2"><UserPlus size={20} className="text-green-400" /> Inscribir pareja</h2>
+              <button onClick={() => setShowRegModal(false)} className="p-2 hover:bg-gray-700 rounded-lg text-gray-400"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="text-gray-400 text-xs uppercase font-bold block mb-2">Categoría</label>
+                <select value={newReg.category_id} onChange={e => setNewReg({ ...newReg, category_id: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+
+              {(['p1', 'p2'] as const).map(slot => {
+                const nameKey = slot === 'p1' ? 'player1_name' : 'player2_name'
+                const emailKey = slot === 'p1' ? 'player1_email' : 'player2_email'
+                const phoneKey = slot === 'p1' ? 'player1_phone' : 'player2_phone'
+                const suggestions = focusedField === slot ? matchesFor(newReg[nameKey]) : []
+                return (
+                  <div key={slot} className="bg-gray-700/40 rounded-xl p-4 space-y-3">
+                    <p className="text-white font-bold text-sm">Jugador {slot === 'p1' ? '1' : '2'}</p>
+                    <div className="relative">
+                      <label className="text-gray-400 text-xs block mb-1">Nombre (escribí para buscar socio)</label>
+                      <input type="text" value={newReg[nameKey]}
+                        onChange={e => setNewReg({ ...newReg, [nameKey]: e.target.value })}
+                        onFocus={() => setFocusedField(slot)}
+                        onBlur={() => setTimeout(() => setFocusedField(f => f === slot ? null : f), 150)}
+                        placeholder="Nombre y apellido"
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" />
+                      {suggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-600 rounded-lg shadow-xl z-20 max-h-48 overflow-y-auto">
+                          {suggestions.map(p => (
+                            <button key={p.id} type="button" onMouseDown={e => e.preventDefault()} onClick={() => pickPlayer(slot, p)}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white text-sm border-b border-gray-700 last:border-0">
+                              <div>{p.name}</div>
+                              {(p.phone || p.email) && <div className="text-gray-400 text-xs">{p.phone || p.email}</div>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-gray-400 text-xs block mb-1">Teléfono</label>
+                        <input type="tel" value={newReg[phoneKey]}
+                          onChange={e => setNewReg({ ...newReg, [phoneKey]: e.target.value })}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-gray-400 text-xs block mb-1">Email</label>
+                        <input type="email" value={newReg[emailKey]}
+                          onChange={e => setNewReg({ ...newReg, [emailKey]: e.target.value })}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm" />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+
+              <div>
+                <label className="text-gray-400 text-xs uppercase font-bold block mb-2">Estado</label>
+                <select value={newReg.status} onChange={e => setNewReg({ ...newReg, status: e.target.value as RegistrationStatus })}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                  <option value="confirmed">Confirmada</option>
+                  <option value="pending">Pendiente de pago</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3 p-6 border-t border-gray-700 sticky bottom-0 bg-gray-800">
+              <button onClick={() => setShowRegModal(false)} className="flex-1 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-xl font-medium">Cancelar</button>
+              <button onClick={saveRegistration}
+                disabled={loading || !newReg.category_id || !newReg.player1_name.trim() || !newReg.player2_name.trim()}
+                className="flex-1 py-3 bg-green-500 hover:bg-green-400 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50">
+                <Save size={18} /> Inscribir
+              </button>
             </div>
           </div>
         </div>
